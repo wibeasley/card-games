@@ -96,7 +96,7 @@ determine_winner <- function( r1, r2 ) {
 }
 # determine_winner(5,3)
 
-for( i in 1:10 ) {
+while( !flifo::is.empty(deck_1) && !flifo::is.empty(deck_2) ) {
   card_1 <- flifo::pop(deck_1)
   card_2 <- flifo::pop(deck_2)
   rank_1 <- determine_rank(card_1)
@@ -119,6 +119,7 @@ for( i in 1:10 ) {
     # flifo::push(deck_1, card_1)
     # flifo::push(deck_2, card_2)
   }
+  Sys.sleep(1)
 }
 
 # ---- verify-values -----------------------------------------------------------
