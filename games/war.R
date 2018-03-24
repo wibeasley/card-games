@@ -64,8 +64,9 @@ ds_player_2 <- ds_deck %>%
 
 rm(indices_player_1, indices_player_2)
 
-deck_1   <- lifo()#max_length = deck_count)
-deck_2   <- lifo()#max_length = deck_count)
+deck_1   <- fifo(max_length = deck_count)
+deck_2   <- fifo(max_length = deck_count)
+
 # i <- 1
 for( i in 1:26 ) {
   # c1 <- ds_player_1$card[i]
