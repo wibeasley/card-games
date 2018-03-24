@@ -6,9 +6,9 @@ rm(list=ls(all=TRUE))  #Clear the variables from previous runs.
 # ---- load-packages -----------------------------------------------------------
 # Attach these package(s) so their functions don't need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
 library(magrittr            , quietly=TRUE)
-library(flifo)
 
 # Verify these packages are available on the machine, but their functions need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
+requireNamespace("dequer"       )
 requireNamespace("tidyr"        )
 requireNamespace("dplyr"        ) # Avoid attaching dplyr, b/c its function names conflict with a lot of packages (esp base, stats, and plyr).
 requireNamespace("testit"       ) # For asserting conditions meet expected patterns/conditions.
@@ -44,10 +44,10 @@ determine_rank <- function( card_name ) {
 
 print_draw <- function( c1, c2, r1, r2 ) {
   message(sprintf(
-    "Turn %s\n\tPlayer 1 card: %7s (rank %2i); %.0f cards remaining\n\tPlayer 2 card: %7s (rank %2i); %.0f cards remaining\n\tWinner: %s",
+    "Turn %s\n\tPlayer 1 card: %7s (rank %2i); %2i cards remaining\n\tPlayer 2 card: %7s (rank %2i); %2i cards remaining\n\tWinner: %s",
     as.character(turn_index),
-    c1, r1, round(flifo::size(deck_1)/92L, 2),
-    c2, r2, round(flifo::size(deck_2)/92L, 2),
+    c1, r1, length(deck_1),
+    c2, r2, length(deck_2),
     determine_winner(r1, r2)
   ))
 }
@@ -83,19 +83,19 @@ ds_player_2 <- ds_deck %>%
 
 rm(indices_player_1, indices_player_2)
 
-plot(ds_player_1$rank, type="l")
-lines(ds_player_2$rank, col="blue")
+# plot(ds_player_1$rank, type="l")
+# lines(ds_player_2$rank, col="blue")
 
-deck_1   <- fifo(max_length = deck_count)
-deck_2   <- fifo(max_length = deck_count)
+deck_1   <- dequer::queue() # FIFO
+deck_2   <- dequer::queue() # FIFO
 
 for( i in 1:26 ) {
-  flifo::push(deck_1, ds_player_1$card[i])
-  flifo::push(deck_2, ds_player_2$card[i])
+  dequer::pushback(deck_1, ds_player_1$card[i])
+  dequer::pushback(deck_2, ds_player_2$card[i])
 }
 
-as.list(ds_player_1$card) %>%
-  purrr::walk(function(x) flifo::push(deck_1, x))
+# as.list(ds_player_1$card) %>%
+#   purrr::walk(function(x) flifo::push(deck_1, x))
 
 # ---- run ---------------------------------------------------------------------
 warning("currently, all cards are lost in a tie.  There are no winners in war.  (Actually, I've been too lazy to program ties.)")
@@ -112,10 +112,10 @@ warning("currently, all cards are lost in a tie.  There are no winners in war.  
 # }
 # bit64::
 turn_index <- VeryLargeIntegers::as.vli(0L)
-while( !flifo::is.empty(deck_1) && !flifo::is.empty(deck_2) ) {
+while( 0<length(deck_1) && 0<length(deck_2) ) {
   turn_index <- turn_index + VeryLargeIntegers::as.vli(1)
-  card_1 <- flifo::pop(deck_1)
-  card_2 <- flifo::pop(deck_2)
+  card_1 <- dequer::pop(deck_1)
+  card_2 <- dequer::pop(deck_2)
   rank_1 <- determine_rank(card_1)
   rank_2 <- determine_rank(card_2)
 
@@ -123,24 +123,24 @@ while( !flifo::is.empty(deck_1) && !flifo::is.empty(deck_2) ) {
 
   winner <- determine_winner(rank_1, rank_2)
   if( winner == "p1") {
-    flifo::push(deck_1, card_1)
-    flifo::push(deck_1, card_2)
+    dequer::pushback(deck_1, card_1)
+    dequer::pushback(deck_1, card_2)
 
   } else if( winner == "p2") {
-    flifo::push(deck_2, card_1)
-    flifo::push(deck_2, card_2)
+    dequer::pushback(deck_2, card_1)
+    dequer::pushback(deck_2, card_2)
 
   } else {
     testit::assert(winner=="tie")
-    # flifo::push(deck_1, card_1)
-    # flifo::push(deck_2, card_2)
+    # dequer::pushback(deck_1, card_1)
+    # dequer::pushback(deck_2, card_2)
   }
   Sys.sleep(1/16)
 }
 
-if( flifo::is.empty(deck_1) ) {
+if( length(deck_1) == 0L ) {
   message("Player 2 Wins !!!!!!")
-} else if( flifo::is.empty(deck_2) ) {
+} else if( length(deck_2) == 0L ) {
   message("Player 1 Wins !!!!!!")
 } else {
   message("Both players lost on the final turn.")
