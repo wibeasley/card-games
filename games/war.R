@@ -20,12 +20,38 @@ requireNamespace("OuhscMunge"   ) # remotes::install_github(repo="OuhscBbmc/Ouhs
 
 # ---- declare-globals ---------------------------------------------------------
 
+possible_suites <- c("h", "c", "d", "s") # heart, club, diamond, spade
+possible_number <- c(2:10, "j", "q", "k", "a")
+# possible_number <- factor(possible_number, levels=possible_number, ordered = T)
+
+ds_deck <- tidyr::crossing(tidyr::nesting(number=possible_number, rank=seq_along(possible_number)), suite=possible_suites) %>%
+  dplyr::mutate(
+    card  = paste0(suite, number)
+    # rank  =
+  ) %>%
+  dplyr::select(
+    -number, -suite
+  )
+deck_count <- nrow(ds_deck)
+testit::assert("The deck should always have 52 cards", deck_count==52L)
+rm(possible_number, possible_suites)
+
 
 # ---- load-data ---------------------------------------------------------------
 
-# ---- tweak-data --------------------------------------------------------------
-# OuhscMunge::column_rename_headstart(ds_county) #Spit out columns to help write call ato `dplyr::rename()`.
+indices_player_1 <- sample(deck_count, size=deck_count/2, replace=F)
+indices_player_2 <- setdiff(seq_len(deck_count), indices_player_1) %>%
+  sample()
 
+
+# ---- tweak-data --------------------------------------------------------------
+ds_player_1 <- ds_deck %>%
+  dplyr::slice(indices_player_1)
+
+ds_player_2 <- ds_deck %>%
+  dplyr::slice(indices_player_2)
+
+rm(ds_deck, indices_player_1, indices_player_2)
 
 # ---- verify-values -----------------------------------------------------------
 # Sniff out problems
