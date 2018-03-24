@@ -1,7 +1,3 @@
-# knitr::stitch_rmd(script="./manipulation/te-ellis.R", output="./stitched-output/manipulation/te-ellis.md") # dir.create("./stitched-output/manipulation/", recursive=T)
-# For a brief description of this file see the presentation at
-#   - slides: https://rawgit.com/wibeasley/RAnalysisSkeleton/master/documentation/time-and-effort-synthesis.html#/
-#   - code: https://github.com/wibeasley/RAnalysisSkeleton/blob/master/documentation/time-and-effort-synthesis.Rpres
 rm(list=ls(all=TRUE))  #Clear the variables from previous runs.
 
 # ---- load-sources ------------------------------------------------------------
@@ -27,7 +23,7 @@ possible_number <- c(2:10, "j", "q", "k", "a")
 
 ds_deck <- tidyr::crossing(tidyr::nesting(number=possible_number, rank=seq_along(possible_number)), suite=possible_suites) %>%
   dplyr::mutate(
-    card  = paste0(suite, number)
+    card  = paste0(number, " of ", suite)
     # rank  =
   ) %>%
   dplyr::select(
@@ -43,6 +39,27 @@ determine_rank <- function( card_name ) {
   testit::assert(nrow(ds_selected_card) == 1L)
 
   return( ds_selected_card$rank )
+}
+
+print_draw <- function( c1, c2, r1, r2 ) {
+  message(sprintf(
+    "Turn %i\n\tPlayer 1 card: %s (rank %i); %i cards remaining\n\tPlayer 2 card: %s (rank %i); %i cards remaining\n\tWinner: %s",
+    turn_index,
+    c1, r1, as.integer(flifo::size(deck_1)/92L),
+    c2, r2, as.integer(flifo::size(deck_2)/92L),
+    determine_winner(r1, r2)
+  ))
+}
+
+determine_winner <- function( r1, r2 ) {
+  winner <- dplyr::case_when(
+    r1  < r2 ~ "p2",
+    r2  < r1 ~ "p1",
+    r1 == r2 ~ "tie",
+    TRUE ~ NA_character_
+  )
+  testit::assert(!is.na(winner))
+  return( winner )
 }
 
 # determine_rank("d2")
@@ -72,31 +89,25 @@ for( i in 1:26 ) {
   flifo::push(deck_2, ds_player_2$card[i])
 }
 
-# ds_player_1$card %>%
-#   purrr::walk(function(x) flifo::push(deck_1, x))
+as.list(ds_player_1$card) %>%
+  purrr::walk(function(x) flifo::push(deck_1, x))
 
 # ---- run ---------------------------------------------------------------------
-print_draw <- function( c1, c2, r1, r2 ) {
-  message(sprintf(
-    "Turn\n\tPlayer 1 card: %s (rank %i); %i cards remaining\n\tPlayer 2 card: %s (rank %i); %i cards remaining\n\tWinner: %s",
-    c1, r1, as.integer(flifo::size(deck_1)/92L),
-    c2, r2, as.integer(flifo::size(deck_2)/92L),
-    determine_winner(r1, r2)
-  ))
-}
-determine_winner <- function( r1, r2 ) {
-  winner <- dplyr::case_when(
-    r1  < r2 ~ "p2",
-    r2  < r1 ~ "p1",
-    r1 == r2 ~ "tie",
-    TRUE ~ NA_character_
-  )
-  testit::assert(!is.na(winner))
-  return( winner )
-}
+warning("currently, all cards are lost in a tie.  There are no winners in war.")
 # determine_winner(5,3)
 
+# escrow_1 <- list()
+#
+# for( i in 1:4 ) {
+#   escrow_1[i] <- flifo::pop(deck_1)
+# }
+#
+# tie <- function( rank_both ) {
+#
+# }
+turn_index <- 0L
 while( !flifo::is.empty(deck_1) && !flifo::is.empty(deck_2) ) {
+  turn_index <- turn_index + 1L
   card_1 <- flifo::pop(deck_1)
   card_2 <- flifo::pop(deck_2)
   rank_1 <- determine_rank(card_1)
@@ -115,7 +126,6 @@ while( !flifo::is.empty(deck_1) && !flifo::is.empty(deck_2) ) {
 
   } else {
     testit::assert(winner=="tie")
-    warning("currently, tie give the cards back to the user")
     # flifo::push(deck_1, card_1)
     # flifo::push(deck_2, card_2)
   }
