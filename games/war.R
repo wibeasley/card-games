@@ -10,7 +10,7 @@ rm(list=ls(all=TRUE))  #Clear the variables from previous runs.
 # ---- load-packages -----------------------------------------------------------
 # Attach these package(s) so their functions don't need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
 library(magrittr            , quietly=TRUE)
-library(rstack)
+library(flifo)
 
 # Verify these packages are available on the machine, but their functions need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
 requireNamespace("tidyr"        )
@@ -64,21 +64,36 @@ ds_player_2 <- ds_deck %>%
 
 rm(indices_player_1, indices_player_2)
 
-fresh_1   <- stack$new()
-fresh_2   <- stack$new()
-# discard_1 <- stack$new()
-# discard_2 <- stack$new()
+deck_1   <- lifo()#max_length = deck_count)
+deck_2   <- lifo()#max_length = deck_count)
+# i <- 1
+for( i in 1:26 ) {
+  # c1 <- ds_player_1$card[i]
+  # c2 <- ds_player_2$card[i]
+  # flifo::push(deck_1, c1)
+  # flifo::push(deck_2, c2)
+  # flifo::(deck_1)
+  flifo::push(deck_1, ds_player_1$card[i])
+  flifo::push(deck_2, ds_player_2$card[i])
+}
 
-purrr::walk(ds_player_1$card, fresh_1$push)
-purrr::walk(ds_player_2$card, fresh_2$push)
+# ds_player_1$card %>%
+#   purrr::walk(function(x) flifo::push(deck_1, x))
+#
+# flifo::push(deck_1, ds_player_1$card[1])
+# flifo::push(deck_1, ds_player_1$card[2])
+#
+#
+# flifo::push(deck_1, ds_player_1$card)
+# flifo::push(deck_2, ds_player_2$card)
 
 # ---- run ---------------------------------------------------------------------
 print_draw <- function( c1, c2, r1, r2 ) {
-  card_count_1 <- fresh_1$size()
-  card_count_2 <- fresh_2$size()
   message(sprintf(
-    "Draw\n\tPlayer 1 card: %s (rank %i); %i cards remaining\n\tPlayer 2 card: %s (rank %i); %i cards remaining\n\tWinner: %s",
-    c1, r1, card_count_1, c2, r2, card_count_2, determine_winner(r1, r2)
+    "Turn\n\tPlayer 1 card: %s (rank %i); %i cards remaining\n\tPlayer 2 card: %s (rank %i); %i cards remaining\n\tWinner: %s",
+    c1, r1, as.integer(flifo::size(deck_1)/92L),
+    c2, r2, as.integer(flifo::size(deck_2)/92L),
+    determine_winner(r1, r2)
   ))
 }
 determine_winner <- function( r1, r2 ) {
@@ -93,8 +108,9 @@ determine_winner <- function( r1, r2 ) {
 }
 # determine_winner(5,3)
 
-card_1 <- fresh_1$pop()
-card_2 <- fresh_2$pop()
+for( i in 1:10 ) {
+card_1 <- flifo::pop(deck_1)
+card_2 <- flifo::pop(deck_2)
 rank_1 <- determine_rank(card_1)
 rank_2 <- determine_rank(card_2)
 
@@ -102,11 +118,19 @@ print_draw(card_1, card_2, rank_1, rank_2)
 
 winner <- determine_winner(rank_1, rank_2)
 if( winner == "p1") {
+  flifo::push(deck_1, card_1)
+  flifo::push(deck_1, card_2)
 
 } else if( winner == "p2") {
+  flifo::push(deck_2, card_1)
+  flifo::push(deck_2, card_2)
 
 } else {
   testit::assert(winner=="tie")
+  warning("currently, tie give the cards back to the user")
+  # flifo::push(deck_1, card_1)
+  # flifo::push(deck_2, card_2)
+}
 }
 
 # ---- verify-values -----------------------------------------------------------
