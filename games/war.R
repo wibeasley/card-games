@@ -64,17 +64,21 @@ ds_player_2 <- ds_deck %>%
 
 rm(indices_player_1, indices_player_2)
 
-fresh_1 <- stack$new()
-fresh_2 <- stack$new()
+fresh_1   <- stack$new()
+fresh_2   <- stack$new()
+# discard_1 <- stack$new()
+# discard_2 <- stack$new()
 
 purrr::walk(ds_player_1$card, fresh_1$push)
 purrr::walk(ds_player_2$card, fresh_2$push)
 
 # ---- run ---------------------------------------------------------------------
 print_draw <- function( c1, c2, r1, r2 ) {
+  card_count_1 <- fresh_1$size()
+  card_count_2 <- fresh_2$size()
   message(sprintf(
-    "Draw\n\tPlayer 1 card: %s (rank %i)\n\tPlayer 2 card: %s (rank %i)\n\tWinner: %s",
-    c1, r1, c2, r2, determine_winner(r1, r2)
+    "Draw\n\tPlayer 1 card: %s (rank %i); %i cards remaining\n\tPlayer 2 card: %s (rank %i); %i cards remaining\n\tWinner: %s",
+    c1, r1, card_count_1, c2, r2, card_count_2, determine_winner(r1, r2)
   ))
 }
 determine_winner <- function( r1, r2 ) {
@@ -95,6 +99,15 @@ rank_1 <- determine_rank(card_1)
 rank_2 <- determine_rank(card_2)
 
 print_draw(card_1, card_2, rank_1, rank_2)
+
+winner <- determine_winner(rank_1, rank_2)
+if( winner == "p1") {
+
+} else if( winner == "p2") {
+
+} else {
+  testit::assert(winner=="tie")
+}
 
 # ---- verify-values -----------------------------------------------------------
 # Sniff out problems
