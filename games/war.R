@@ -67,26 +67,13 @@ rm(indices_player_1, indices_player_2)
 deck_1   <- fifo(max_length = deck_count)
 deck_2   <- fifo(max_length = deck_count)
 
-# i <- 1
 for( i in 1:26 ) {
-  # c1 <- ds_player_1$card[i]
-  # c2 <- ds_player_2$card[i]
-  # flifo::push(deck_1, c1)
-  # flifo::push(deck_2, c2)
-  # flifo::(deck_1)
   flifo::push(deck_1, ds_player_1$card[i])
   flifo::push(deck_2, ds_player_2$card[i])
 }
 
 # ds_player_1$card %>%
 #   purrr::walk(function(x) flifo::push(deck_1, x))
-#
-# flifo::push(deck_1, ds_player_1$card[1])
-# flifo::push(deck_1, ds_player_1$card[2])
-#
-#
-# flifo::push(deck_1, ds_player_1$card)
-# flifo::push(deck_2, ds_player_2$card)
 
 # ---- run ---------------------------------------------------------------------
 print_draw <- function( c1, c2, r1, r2 ) {
@@ -110,28 +97,28 @@ determine_winner <- function( r1, r2 ) {
 # determine_winner(5,3)
 
 for( i in 1:10 ) {
-card_1 <- flifo::pop(deck_1)
-card_2 <- flifo::pop(deck_2)
-rank_1 <- determine_rank(card_1)
-rank_2 <- determine_rank(card_2)
+  card_1 <- flifo::pop(deck_1)
+  card_2 <- flifo::pop(deck_2)
+  rank_1 <- determine_rank(card_1)
+  rank_2 <- determine_rank(card_2)
 
-print_draw(card_1, card_2, rank_1, rank_2)
+  print_draw(card_1, card_2, rank_1, rank_2)
 
-winner <- determine_winner(rank_1, rank_2)
-if( winner == "p1") {
-  flifo::push(deck_1, card_1)
-  flifo::push(deck_1, card_2)
+  winner <- determine_winner(rank_1, rank_2)
+  if( winner == "p1") {
+    flifo::push(deck_1, card_1)
+    flifo::push(deck_1, card_2)
 
-} else if( winner == "p2") {
-  flifo::push(deck_2, card_1)
-  flifo::push(deck_2, card_2)
+  } else if( winner == "p2") {
+    flifo::push(deck_2, card_1)
+    flifo::push(deck_2, card_2)
 
-} else {
-  testit::assert(winner=="tie")
-  warning("currently, tie give the cards back to the user")
-  # flifo::push(deck_1, card_1)
-  # flifo::push(deck_2, card_2)
-}
+  } else {
+    testit::assert(winner=="tie")
+    warning("currently, tie give the cards back to the user")
+    # flifo::push(deck_1, card_1)
+    # flifo::push(deck_2, card_2)
+  }
 }
 
 # ---- verify-values -----------------------------------------------------------
