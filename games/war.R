@@ -10,6 +10,7 @@ rm(list=ls(all=TRUE))  #Clear the variables from previous runs.
 # ---- load-packages -----------------------------------------------------------
 # Attach these package(s) so their functions don't need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
 library(magrittr            , quietly=TRUE)
+library(rstack)
 
 # Verify these packages are available on the machine, but their functions need to be qualified: http://r-pkgs.had.co.nz/namespace.html#search-path
 requireNamespace("tidyr"        )
@@ -36,6 +37,16 @@ deck_count <- nrow(ds_deck)
 testit::assert("The deck should always have 52 cards", deck_count==52L)
 rm(possible_number, possible_suites)
 
+determine_rank <- function( card_name ) {
+  ds_selected_card <- ds_deck %>%
+    dplyr::filter(card == card_name)
+  testit::assert(nrow(ds_selected_card) == 1L)
+
+  return( ds_selected_card$rank )
+}
+
+# determine_rank("d2")
+# determine_rank("sj")
 
 # ---- load-data ---------------------------------------------------------------
 
@@ -51,7 +62,39 @@ ds_player_1 <- ds_deck %>%
 ds_player_2 <- ds_deck %>%
   dplyr::slice(indices_player_2)
 
-rm(ds_deck, indices_player_1, indices_player_2)
+rm(indices_player_1, indices_player_2)
+
+fresh_1 <- stack$new()
+fresh_2 <- stack$new()
+
+purrr::walk(ds_player_1$card, fresh_1$push)
+purrr::walk(ds_player_2$card, fresh_2$push)
+
+# ---- run ---------------------------------------------------------------------
+print_draw <- function( c1, c2, r1, r2 ) {
+  message(sprintf(
+    "Draw\n\tPlayer 1 card: %s (rank %i)\n\tPlayer 2 card: %s (rank %i)\n\tWinner: %s",
+    c1, r1, c2, r2, determine_winner(r1, r2)
+  ))
+}
+determine_winner <- function( r1, r2 ) {
+  winner <- dplyr::case_when(
+    r1  < r2 ~ "p2",
+    r2  < r1 ~ "p1",
+    r1 == r2 ~ "tie",
+    TRUE ~ NA_character_
+  )
+  testit::assert(!is.na(winner))
+  return( winner )
+}
+# determine_winner(5,3)
+
+card_1 <- fresh_1$pop()
+card_2 <- fresh_2$pop()
+rank_1 <- determine_rank(card_1)
+rank_2 <- determine_rank(card_2)
+
+print_draw(card_1, card_2, rank_1, rank_2)
 
 # ---- verify-values -----------------------------------------------------------
 # Sniff out problems
