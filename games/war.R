@@ -71,20 +71,26 @@ determine_escrow_size <- function( rank_both ) {
 # determine_rank("sj")
 
 # ---- load-data ---------------------------------------------------------------
-indices_player_1 <- sample(deck_count, size=deck_count/2, replace=F) %>%
-  sample()
-indices_player_2 <- setdiff(seq_len(deck_count), indices_player_1) %>%
-  sample() %>%
-  sample()
+# indices_player_1 <- sample(deck_count, size=deck_count/2, replace=F) %>%
+#   sample()
+# indices_player_2 <- setdiff(seq_len(deck_count), indices_player_1) %>%
+#   sample() %>%
+#   sample()
+
+ds_deck <- ds_deck %>%
+  dplyr::sample_n(nrow(.)) %>%
+  dplyr::sample_n(nrow(.))
 
 # ---- tweak-data --------------------------------------------------------------
 ds_player_1 <- ds_deck %>%
-  dplyr::slice(indices_player_1)
+  dplyr::slice(1:26) %>%
+  dplyr::sample_n(nrow(.))
 
 ds_player_2 <- ds_deck %>%
-  dplyr::slice(indices_player_2)
+  dplyr::slice(27:52) %>%
+  dplyr::sample_n(nrow(.))
 
-rm(indices_player_1, indices_player_2)
+# rm(indices_player_1, indices_player_2)
 
 # plot(ds_player_1$rank, type="l")
 # lines(ds_player_2$rank, col="blue")
