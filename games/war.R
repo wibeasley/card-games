@@ -22,14 +22,16 @@ possible_suites <- c("h", "c", "d", "s") # heart, club, diamond, spade
 possible_number <- c(2:10, "j", "q", "k", "a")
 # possible_number <- factor(possible_number, levels=possible_number, ordered = T)
 
-ds_deck <- tidyr::crossing(tidyr::nesting(number=possible_number, rank=seq_along(possible_number)), suite=possible_suites) %>%
+ds_deck <- possible_number %>%
+  tidyr::nesting(number=., rank=seq_along(.)) %>%
+  tidyr::crossing(., suite=possible_suites) %>%
   dplyr::mutate(
-    card  = paste0(number, " of ", suite)
-    # rank  =
+    card  = sprintf("%2s of %s", number, suite)
   ) %>%
   dplyr::select(
     -number, -suite
   )
+# ds_deck
 deck_count <- nrow(ds_deck)
 testit::assert("The deck should always have 52 cards", deck_count==52L)
 rm(possible_number, possible_suites)
@@ -63,15 +65,16 @@ determine_winner <- function( r1, r2 ) {
   return( winner )
 }
 determine_escrow_size <- function( rank_both ) {
-  min(rank_both+1, length(deck_1), length(deck_2))
+  as.integer(min(rank_both+1L, length(deck_1), length(deck_2)))
 }
-
 # determine_rank("d2")
 # determine_rank("sj")
 
 # ---- load-data ---------------------------------------------------------------
-indices_player_1 <- sample(deck_count, size=deck_count/2, replace=F)
+indices_player_1 <- sample(deck_count, size=deck_count/2, replace=F) %>%
+  sample()
 indices_player_2 <- setdiff(seq_len(deck_count), indices_player_1) %>%
+  sample() %>%
   sample()
 
 # ---- tweak-data --------------------------------------------------------------
