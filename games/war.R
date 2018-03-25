@@ -62,17 +62,17 @@ determine_winner <- function( r1, r2 ) {
   testit::assert(!is.na(winner))
   return( winner )
 }
+determine_escrow_size <- function( rank_both ) {
+  min(rank_both+1, length(deck_1), length(deck_2))
+}
 
 # determine_rank("d2")
 # determine_rank("sj")
 
 # ---- load-data ---------------------------------------------------------------
-
 indices_player_1 <- sample(deck_count, size=deck_count/2, replace=F)
 indices_player_2 <- setdiff(seq_len(deck_count), indices_player_1) %>%
   sample()
-
-
 
 # ---- tweak-data --------------------------------------------------------------
 ds_player_1 <- ds_deck %>%
@@ -88,29 +88,52 @@ rm(indices_player_1, indices_player_2)
 
 deck_1   <- dequer::queue() # FIFO
 deck_2   <- dequer::queue() # FIFO
+purrr::walk(ds_player_1$card, ~dequer::pushback(deck_1, .))
+purrr::walk(ds_player_2$card, ~dequer::pushback(deck_2, .))
+# deck_1
+# str(deck_1)
 
-for( i in 1:26 ) {
-  dequer::pushback(deck_1, ds_player_1$card[i])
-  dequer::pushback(deck_2, ds_player_2$card[i])
-}
-
-# as.list(ds_player_1$card) %>%
-#   purrr::walk(function(x) flifo::push(deck_1, x))
 
 # ---- run ---------------------------------------------------------------------
-warning("currently, all cards are lost in a tie.  There are no winners in war.  (Actually, I've been too lazy to program ties.)")
 # determine_winner(5,3)
 
-# escrow_1 <- list()
-#
-# for( i in 1:4 ) {
-#   escrow_1[i] <- flifo::pop(deck_1)
-# }
-#
-# tie <- function( rank_both ) {
-#
-# }
-# bit64::
+tie <- function( rank_both ) {
+  escrow_1 <- list()
+  escrow_2 <- list()
+  for( i in seq_len(determine_escrow_size) ) {
+    escrow_1[i] <- dequer::pop(deck_1)
+    escrow_2[i] <- dequer::pop(deck_2)
+  }
+  rank_1 <- determine_rank(escrow_1[length(escrow_1)])
+  rank_2 <- determine_rank(escrow_2[length(escrow_2)])
+
+  winner <- determine_winner(rank_1, rank_2)
+  if( winner == "p1") {
+    purrr::walk(escrow_1, ~dequer::pushback(deck_1, .))
+    purrr::walk(escrow_2, ~dequer::pushback(deck_1, .))
+    dequer::pushback(deck_1, card_1)
+    dequer::pushback(deck_1, card_2)
+  } else if( winner == "p2") {
+    purrr::walk(escrow_1, ~dequer::pushback(deck_1, .))
+    purrr::walk(escrow_2, ~dequer::pushback(deck_2, .))
+    dequer::pushback(deck_2, card_1)
+    dequer::pushback(deck_2, card_2)
+  } else if ( sample(c(T, F), size=1) ) {
+    message("Tie again, and randomly give to player 1.")
+    purrr::walk(escrow_1, ~dequer::pushback(deck_1, .))
+    purrr::walk(escrow_2, ~dequer::pushback(deck_1, .))
+    dequer::pushback(deck_1, card_1)
+    dequer::pushback(deck_1, card_2)
+  } else {
+    message("Tie again, and randomly give to player 2.")
+    purrr::walk(escrow_1, ~dequer::pushback(deck_1, .))
+    purrr::walk(escrow_2, ~dequer::pushback(deck_2, .))
+    dequer::pushback(deck_2, card_1)
+    dequer::pushback(deck_2, card_2)
+  }
+  Sys.sleep(2)
+}
+
 turn_index <- VeryLargeIntegers::as.vli(0L)
 while( 0<length(deck_1) && 0<length(deck_2) ) {
   turn_index <- turn_index + VeryLargeIntegers::as.vli(1)
@@ -125,11 +148,9 @@ while( 0<length(deck_1) && 0<length(deck_2) ) {
   if( winner == "p1") {
     dequer::pushback(deck_1, card_1)
     dequer::pushback(deck_1, card_2)
-
   } else if( winner == "p2") {
     dequer::pushback(deck_2, card_1)
     dequer::pushback(deck_2, card_2)
-
   } else {
     testit::assert(winner=="tie")
     # dequer::pushback(deck_1, card_1)
