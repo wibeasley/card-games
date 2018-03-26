@@ -48,8 +48,8 @@ print_draw <- function( c1, c2, r1, r2 ) {
   message(sprintf(
     "Turn %s\n\tPlayer 1 card: %7s (rank %2i); %2i cards remaining\n\tPlayer 2 card: %7s (rank %2i); %2i cards remaining\n\tWinner: %s",
     as.character(turn_index),
-    c1, r1, length(deck_1),
-    c2, r2, length(deck_2),
+    c1, r1, length(deck_1) + 1L,
+    c2, r2, length(deck_2) + 1L,
     determine_winner(r1, r2)
   ))
 }
@@ -129,6 +129,13 @@ tie <- function( rank_both ) {
   rank_1 <- determine_rank(escrow_1[length(escrow_1)])
   rank_2 <- determine_rank(escrow_2[length(escrow_2)])
 
+  if( length(escrow_1) * length(escrow_2) == 0 ) {
+    # If it's the last card, then return it to the owners can play the next turn.
+    dequer::pushback(deck_1, card_1)
+    dequer::pushback(deck_2, card_2)
+    return()
+  }
+
   winner <- determine_winner(rank_1, rank_2)
   if( winner == "p1" ) {
     purrr::walk(escrow_1, ~dequer::pushback(deck_1, .))
@@ -183,7 +190,7 @@ while( 0<length(deck_1) && 0<length(deck_2) ) {
     # dequer::pushback(deck_1, card_1)
     # dequer::pushback(deck_2, card_2)
   }
-  Sys.sleep(1/16)
+  Sys.sleep(1/1)
 }
 
 if( length(deck_1) == 0L ) {
