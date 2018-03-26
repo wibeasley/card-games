@@ -102,22 +102,35 @@ purrr::walk(ds_player_2$card, ~dequer::pushback(deck_2, .))
 # deck_1
 # str(deck_1)
 
+shuffle <- function( ) {
+  # message(length(deck_1), "vs",  length(deck_2))
+  escrow_1 <- purrr::map(seq_along(deck_1), ~dequer::pop(deck_1))
+  escrow_2 <- purrr::map(seq_along(deck_2), ~dequer::pop(deck_2))
+  # message(length(deck_1), "vs",  length(deck_2))
+
+  escrow_1 <- escrow_1[sample(seq_along(escrow_1))]
+  escrow_2 <- escrow_2[sample(seq_along(escrow_2))]
+
+  purrr::walk(escrow_1, ~dequer::pushback(deck_1, .))
+  purrr::walk(escrow_2, ~dequer::pushback(deck_2, .))
+  # message(length(deck_1), "vs",  length(deck_2))
+  # browser()
+}
+# a <- purrr::map(1:4, ~dequer::pop(deck_1))
 
 # ---- run ---------------------------------------------------------------------
 # determine_winner(5,3)
 
 tie <- function( rank_both ) {
-  escrow_1 <- list()
-  escrow_2 <- list()
-  for( i in seq_len(determine_escrow_size) ) {
-    escrow_1[i] <- dequer::pop(deck_1)
-    escrow_2[i] <- dequer::pop(deck_2)
-  }
+  escrow_size <- determine_escrow_size(rank_both)
+  escrow_1 <- purrr::map(seq_len(escrow_size), ~dequer::pop(deck_1))
+  escrow_2 <- purrr::map(seq_len(escrow_size), ~dequer::pop(deck_2))
+
   rank_1 <- determine_rank(escrow_1[length(escrow_1)])
   rank_2 <- determine_rank(escrow_2[length(escrow_2)])
 
   winner <- determine_winner(rank_1, rank_2)
-  if( winner == "p1") {
+  if( winner == "p1" ) {
     purrr::walk(escrow_1, ~dequer::pushback(deck_1, .))
     purrr::walk(escrow_2, ~dequer::pushback(deck_1, .))
     dequer::pushback(deck_1, card_1)
@@ -146,6 +159,10 @@ tie <- function( rank_both ) {
 turn_index <- VeryLargeIntegers::as.vli(0L)
 while( 0<length(deck_1) && 0<length(deck_2) ) {
   turn_index <- turn_index + VeryLargeIntegers::as.vli(1)
+  if( turn_index %% 10 == 0L ) {
+    shuffle()
+  }
+
   card_1 <- dequer::pop(deck_1)
   card_2 <- dequer::pop(deck_2)
   rank_1 <- determine_rank(card_1)
@@ -161,7 +178,8 @@ while( 0<length(deck_1) && 0<length(deck_2) ) {
     dequer::pushback(deck_2, card_1)
     dequer::pushback(deck_2, card_2)
   } else {
-    testit::assert(winner=="tie")
+    tie(rank_1)
+    # testit::assert(winner=="tie")
     # dequer::pushback(deck_1, card_1)
     # dequer::pushback(deck_2, card_2)
   }
